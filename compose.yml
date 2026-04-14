@@ -38,6 +38,7 @@ services:
     volumes:
       - ./sqldb-provider/.data:/var/lib/postgresql/data
       - ./sqldb-provider/psql.conf:/etc/psql.conf
+      - ./sqldb-provider/tmp-runtime:/tmp
       - ./.provider-logs/sqldb-provider:/var/log/postgresql
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}' ]

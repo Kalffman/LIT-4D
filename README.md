@@ -27,6 +27,20 @@ For example, you can:
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - [Python 3.12+](https://www.python.org/downloads/) (Required to execute automation scripts)
 
+> [!tip]- Usage with podman
+>
+> To use podman instead of docker first you need install as follow the
+> guide [here](https://podman.io/getting-started/installation)
+>
+> After that, for use docker compose, you need to export the var `DOCKER_HOST` accourding to your **podman machine**
+> sock installation.
+> E.g.:
+>
+> ```bash
+> export DOCKER_HOST=unix:///run/podman/podman-machine-default-api.sock
+> ```
+>
+> This is enough to use docker compose with podman. Jut run `docker compose up -d` and enjoy.
 ---
 
 ## Services & Providers
@@ -88,7 +102,8 @@ Detailed configuration for each provider can be found in their respective direct
 - [ ] 💡 And more...
 
 ### What-if? 👀
- - [ ] Make production ready setup
+
+- [ ] Make production ready setup
 
 ---
 

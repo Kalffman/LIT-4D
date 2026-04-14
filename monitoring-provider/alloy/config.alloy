@@ -1,58 +1,116 @@
-loki.process "my_app" {
-	forward_to = [loki.write.default.receiver]
-
-	stage.regex {
-		expression = "(?P<extracted_timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2}))"
-	}
-
-	stage.json {
-		expressions = {
-			error_stack_trace = "error.stack_trace",
-			level             = "log.level",
-			logger            = "log.logger",
-			message           = "message",
-		}
-	}
-
-	stage.labels {
-		values = {
-			error_message       = null,
-			error_stack_trace   = null,
-			error_type          = null,
-			http_request_method = null,
-			level               = null,
-			logger              = null,
-			message             = null,
-			service_name        = null,
-			service_version     = null,
-			stripe_response     = null,
-		}
-	}
-
-	stage.timestamp {
-		source   = "extracted_timestamp"
-		format   = "RFC3339"
-		location = "UTC"
-	}
-}
-
-loki.source.file "my_app" {
-	targets = [{
-		__address__ = "localhost",
-		__path__    = "/var/log/my-app.log",
-		job         = "my-app",
-	}]
-	forward_to = [loki.process.my_app.receiver]
-
-	file_match {
-		enabled = true
-	}
-	legacy_positions_file = "/tmp/positions.yaml"
-}
-
 loki.write "default" {
-	endpoint {
-		url = "http://monitoring-provider-loki:3100/loki/api/v1/push"
-	}
-	external_labels = {}
+    endpoint {
+        url = "http://monitoring-provider-loki:3100/loki/api/v1/push"
+    }
+    external_labels = {}
+}
+
+loki.source.file "my_app_logs" {
+    targets = [{
+        __address__ = "localhost",
+        __path__    = "/var/log/my-app.log", // this is the selector corresponds to "/.provider-logs/my-app.log"
+        job         = "my-app",
+    }]
+    forward_to = [loki.process.my_app.receiver]
+
+    file_match {
+        enabled = true
+    }
+    legacy_positions_file = "/tmp/positions.yaml"
+}
+
+loki.process "my_app" {
+    forward_to = [loki.write.default.receiver]
+
+    stage.regex {
+        expression = "(?P<extracted_timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2}))"
+    }
+
+    stage.json {
+        expressions = {
+            error_stack_trace = "error.stack_trace",
+            level             = "log.level",
+            logger            = "log.logger",
+            message           = "message",
+        }
+    }
+
+    stage.labels {
+        values = {
+            error_message       = null,
+            error_stack_trace   = null,
+            error_type          = null,
+            http_request_method = null,
+            level               = null,
+            logger              = null,
+            message             = null,
+            service_name        = null,
+            service_version     = null,
+            stripe_response     = null,
+        }
+    }
+
+    stage.timestamp {
+        source   = "extracted_timestamp"
+        format   = "RFC3339"
+        location = "UTC"
+    }
+}
+
+loki.source.file "oauth_provider_logs" {
+    targets = [{
+        __address__ = "localhost",
+        __path__    = "/var/log/oauth-provider/*.log", // this is the selector corresponds to "/.provider-logs/oauth-provider/*.log"
+        job         = "oauth_provider",
+    }]
+    forward_to = [loki.process.oauth_provider.receiver]
+
+    file_match {
+        enabled = true
+    }
+
+    legacy_positions_file = "/tmp/positions.yaml"
+}
+
+loki.process "oauth_provider" {
+    forward_to = [loki.write.default.receiver]
+
+    stage.regex {
+        expression = "(?P<extracted_timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2}))"
+    }
+
+    stage.timestamp {
+        source   = "extracted_timestamp"
+        format   = "RFC3339"
+        location = "UTC"
+    }
+}
+
+loki.source.file "sqldb_provider_logs" {
+    targets = [{
+        __address__ = "localhost",
+        __path__    = "/var/log/sqldb-provider/*", // this is the selector corresponds to "/.provider-logs/sqldb-provider/*"
+        job         = "sqldb_provider",
+    }]
+    forward_to = [loki.process.sqldb_provider.receiver]
+
+    file_match {
+        enabled = true
+    }
+
+    legacy_positions_file = "/tmp/positions.yaml"
+}
+
+loki.process "sqldb_provider" {
+    forward_to = [loki.write.default.receiver]
+
+    stage.regex {
+        expression = "(?P<extracted_timestamp>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2}))"
+    }
+
+    stage.timestamp {
+        source   = "extracted_timestamp"
+        format   = "RFC3339"
+        location = "UTC"
+    }
 }
