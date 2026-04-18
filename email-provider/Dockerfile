@@ -1,3 +1,3 @@
 ARG PROVIDER_VERSION
-FROM maildev/maildev:${PROVIDER_VERSION}
+FROM axllent/mailpit:${PROVIDER_VERSION}
 # SETUP
