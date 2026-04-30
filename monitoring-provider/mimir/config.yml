@@ -1,0 +1,27 @@
+multitenancy_enabled: false
+
+server:
+  http_listen_port: 9009
+  log_level: info
+
+common:
+  storage:
+    backend: s3
+    s3:
+      endpoint: blob-storage-provider:9000
+      bucket_name: mimir
+      access_key_id: blob-storage-provider
+      secret_access_key: 8L08-570R4G3-PR0V1D3R
+      insecure: true
+
+blocks_storage:
+  s3:
+    bucket_name: mimir-blocks
+
+ruler_storage:
+  s3:
+    bucket_name: mimir-rules
+
+ingester:
+  ring:
+    instance_addr: 127.0.0.1

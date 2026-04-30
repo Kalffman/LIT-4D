@@ -114,3 +114,57 @@ loki.process "sqldb_provider" {
         location = "UTC"
     }
 }
+
+loki.process "faro" {
+    forward_to = [loki.write.default.receiver]
+
+    stage.regex {
+        expression = "(?P<extracted_timestamp>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2}))"
+    }
+
+    stage.timestamp {
+        source   = "extracted_timestamp"
+        format   = "RFC3339"
+        location = "UTC"
+    }
+}
+
+faro.receiver "frontend" {
+    server {
+        listen_address = "0.0.0.0"
+        listen_port = 12350
+        cors_allowed_origins = ["*"]
+    }
+
+    output {
+        logs = [loki.process.faro.receiver]
+        traces = [otelcol.processor.batch.default.input]
+    }
+}
+
+otelcol.receiver.otlp "otlp_receiver" {
+    grpc { }
+    http { }
+
+    output {
+        traces = [otelcol.processor.batch.default.input]
+        metrics = [otelcol.processor.batch.default.input]
+    }
+}
+
+otelcol.processor.batch "default" {
+    send_batch_size = 1000
+    send_batch_max_size = 2000
+    timeout = "2s"
+    output {
+        traces = [otelcol.exporter.otlp.tempo.input]
+//        metrics = []
+    }
+}
+
+otelcol.exporter.otlp "tempo" {
+    client {
+        endpoint = env("ALLOY_OTLP_UPSTREAM")
+        tls { insecure = true }
+    }
+}

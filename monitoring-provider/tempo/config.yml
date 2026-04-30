@@ -1,0 +1,67 @@
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+  log_level: info
+
+distributor:
+  receivers:
+    jaeger:
+      protocols:
+        thrift_http:
+        grpc:
+        thrift_binary:
+        thrift_compact:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+  processor:
+    service_graphs:
+      wait: 10s
+    span_metrics:
+    local_blocks:
+      flush_to_storage: true
+
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://monitoring-provider-mimir:9009/api/v1/write
+        send_exemplars: true
+
+  traces_storage:
+    path: /tmp/tempo/generator/traces
+
+query_frontend:
+  mcp_server:
+    enabled: true
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      endpoint: blob-storage-provider:9000
+      bucket: tempo
+      access_key: blob-storage-provider
+      secret_key: 8L08-570R4G3-PR0V1D3R
+      insecure: true
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [ span-metrics, service-graphs, local-blocks ]
+      generate_native_histograms: both
+
+usage_report:
+  reporting_enabled: false

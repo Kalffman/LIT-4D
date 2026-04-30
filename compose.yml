@@ -29,6 +29,8 @@ services:
     depends_on:
       sqldb-provider:
         condition: service_healthy
+      email-provider:
+        condition: service_started
 
   sqldb-provider:
     build:
@@ -93,6 +95,24 @@ services:
       - ./feature-flag-provider/.env
     volumes:
       - ./feature-flag-provider/.data/uploads:/usr/local/src/app/packages/back-end/uploads
+
+  blob-storage-provider:
+    profiles:
+      - monitoring
+    build:
+      context: ./blob-storage-provider
+      args:
+        - PROVIDER_VERSION=${BLOB_STORAGE_PROVIDER_IMAGE_VERSION}
+    env_file:
+      - ./blob-storage-provider/.env
+    volumes:
+      - ./blob-storage-provider/.data:/data:delegated
+    healthcheck:
+      test: "timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 
 include:
   - path: ./monitoring-provider/compose.yml

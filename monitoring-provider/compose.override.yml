@@ -4,6 +4,12 @@ services:
       project: lit-4d
     ports:
       - '12345:12345'
+      - '12350:12350'
+      - '12348:12348'
+      - '6832:6832'
+      - '55679:55679'
+      - '4317:4317'
+      - '4318:4318'
     command: [ "run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data", "--server.http.listen-addr=0.0.0.0:12345" ]
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:12345/-/healthy" ]
@@ -23,3 +29,25 @@ services:
       - '3100:3100'
       - '9096:9096'
     command: "-config.file=/etc/loki/local-config.yaml"
+
+  monitoring-provider-mimir:
+    labels:
+      project: lit-4d
+    ports:
+      - '19009:9009'
+    command:
+      - '-config.file=/etc/config.yml'
+      - 'ingester.native-histograms-ingestion-enabled=true'
+
+  monitoring-provider-tempo:
+    labels:
+      project: lit-4d
+    ports:
+      - '3200:3200'
+      - '9411:9411'
+      - '55680:55680'
+      - '55681:55681'
+      - '14250:14250'
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --output-document=- http://localhost:3200/ready | grep -q -w ready || exit 1" ]
+    command: "-config.file=/etc/config.yml"

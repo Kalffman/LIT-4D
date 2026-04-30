@@ -1,8 +1,51 @@
 apiVersion: 1
 
 datasources:
-  - name: loki
+  - name: Loki
+    uid: loki
     type: loki
     access: proxy
     url: http://monitoring-provider-loki:3100
+
+  - name: Mimir
+    uid: mimir
+    type: prometheus
+    access: proxy
+    url: http://monitoring-provider-mimir:9009/prometheus
+
+  - name: Tempo
+    uid: tempo-streaming
+    type: tempo
+    access: proxy
+    url: http://monitoring-provider-tempo:3200
     editable: true
+    jsonData:
+      nodeGraph:
+        enabled: true
+      serviceMap:
+        datasourceUid: mimir
+      streamingEnabled:
+        search: true
+        metrics: true
+
+  - name: Tempo (no streaming)
+    uid: tempo-no-streaming
+    type: tempo
+    access: proxy
+    url: http://monitoring-provider-tempo:3200
+    editable: true
+    jsonData:
+      serviceMap:
+        datasourceUid: mimir
+
+  - name: SQL-DB Provider
+    type: postgres
+    uid: sqldb-provider
+    url: sqldb-provider:5432
+    user: postgres
+    jsonData:
+      database: postgres
+      sslmode: disable
+      postgresVersion: 1700
+    secureJsonData:
+      password: P@stgre5
